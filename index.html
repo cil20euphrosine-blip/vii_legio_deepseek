@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Untitled Project</title><meta name="title" content="Untitled Project"><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="./style.css"><script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" async=""></script><script type="importmap">{
+  "imports": {}
+}</script></head><body>
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VII LEGIO - Console de Bord</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+        :root {
+            --bg-app: #E8DFD3; --bg-panel: #F4EFE6; --text-dark: #4A3B32; --text-light: #8B7D73; 
+            --accent: #C28B59; --sc-color: #5C7C7A; --uc-color: #8C6A9E; --btn-bg: #E0D4C5;
+            --shadow: 0 4px 10px rgba(74, 59, 50, 0.08); --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        * { box-sizing: border-box; font-family: 'Nunito', sans-serif; }
+
+        body {
+            background-color: var(--bg-app); color: var(--text-dark); margin: 0; 
+            padding: 10px; padding-bottom: 20px; display: flex; flex-direction: column; 
+            height: 100dvh; overflow: hidden; position: relative;
+        }
+
+        .status-bar {
+            display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-panel);
+            border-radius: 20px; padding: 10px 15px; margin-bottom: 10px;
+            box-shadow: var(--shadow); font-weight: 800; font-size: 12px; flex-shrink: 0;
+        }
+        .journal-btn { background: none; border: none; font-size: 16px; cursor: pointer; padding: 0 5px; }
+
+        .tabs { display: flex; gap: 5px; margin-bottom: 10px; flex-shrink: 0; }
+        .tabs button {
+            flex: 1; padding: 10px 5px; font-size: 11px; font-weight: 700;
+            background-color: var(--bg-panel); color: var(--text-light);
+            border: 1px solid rgba(0,0,0,0.05); border-radius: 12px; cursor: pointer; transition: all 0.2s;
+        }
+        .tabs button.active { background-color: var(--accent); color: #fff; transform: translateY(-2px); }
+
+        .panel {
+            background-color: var(--bg-panel); border-radius: 20px; padding: 15px;
+            margin-bottom: 10px; box-shadow: var(--shadow); display: none; flex-direction: column; flex-shrink: 0;
+        }
+        .panel.active { display: flex; }
+
+        .capacity-bar {
+            width: 100%; height: 20px; background-color: var(--btn-bg); border-radius: 10px;
+            margin-bottom: 15px; position: relative; display: flex; align-items: center;
+            justify-content: center; font-size: 11px; font-weight: 800; overflow: hidden;
+        }
+        .capacity-fill { position: absolute; left: 0; top: 0; bottom: 0; background-color: var(--accent); width: 0%; transition: width 0.3s; z-index: 1; }
+        .capacity-text { z-index: 2; }
+
+        .item-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed rgba(139, 125, 115, 0.2);
+        }
+        .item-row span:first-child { font-weight: 700; font-size: 13px; }
+        .btn-group { display: flex; gap: 8px; align-items: center; background: var(--bg-app); padding: 3px 6px; border-radius: 20px; }
+
+        button.btn-round {
+            background-color: var(--bg-panel); border: 1px solid rgba(0,0,0,0.1); width: 28px; height: 28px;
+            border-radius: 50%; cursor: pointer; font-weight: 800; font-size: 16px;
+            display: flex; align-items: center; justify-content: center; transition: all 0.1s;
+        }
+        button.btn-round:active { background-color: var(--btn-bg); transform: scale(0.9); }
+        .item-value { width: 20px; text-align: center; font-weight: 800; font-size: 14px; color: var(--accent); }
+
+        button.btn-primary {
+            width: 100%; padding: 12px; background-color: var(--text-dark); color: var(--bg-panel);
+            border: none; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 10px;
+        }
+        button.btn-accent { background-color: var(--accent); color: #fff; }
+
+        /* Liste de la route (annulation) */
+        .route-list {
+            background-color: var(--bg-app); border-radius: 15px; padding: 10px;
+            margin-bottom: 10px; min-height: 50px; max-height: 120px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .route-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: var(--bg-panel); padding: 5px 10px; border-radius: 8px;
+            font-size: 13px; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .route-item button {
+            background: var(--danger); color: white; border: none; border-radius: 50%;
+            width: 20px; height: 20px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;
+        }
+
+        .nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .nav-grid button {
+            background-color: var(--bg-panel); border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 10px; padding: 12px 5px; font-size: 13px; font-weight: 800; cursor: pointer;
+        }
+        .nav-grid button:active { background-color: var(--btn-bg); }
+        .nav-grid .empty { visibility: hidden; }
+
+        .parsec-selector {
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: var(--bg-app); padding: 8px 15px; border-radius: 15px; margin-bottom: 10px;
+        }
+        .parsec-selector span { font-size: 16px; font-weight: 800; color: var(--accent); }
+
+        /* Le Chat */
+        .chat-area {
+            flex-grow: 1; overflow-y: auto; background-color: var(--bg-panel);
+            border-radius: 20px; padding: 15px; display: flex; flex-direction: column;
+            gap: 12px; box-shadow: var(--shadow); margin-bottom: 5px; position: relative;
+        }
+
+        .msg { max-width: 90%; padding: 10px 14px; font-size: 13px; line-height: 1.4; }
+        .msg-sc { align-self: flex-start; background-color: #EEF2F1; border-left: 4px solid var(--sc-color); border-radius: 15px 15px 15px 3px; color: #33413F; }
+        .msg-uc { align-self: flex-end; background-color: #F6F1F8; border-right: 4px solid var(--uc-color); border-radius: 15px 15px 3px 15px; text-align: right; color: #4A3855; }
+        .msg strong { font-size: 10px; text-transform: uppercase; display: block; margin-bottom: 3px; opacity: 0.7; }
+
+        /* Bouton d'action flottant */
+        .fab {
+            position: fixed; bottom: 80px; right: 25px; width: 60px; height: 60px;
+            background-color: var(--accent); color: white; border-radius: 50%;
+            display: none; align-items: center; justify-content: center; font-size: 32px; font-weight: 300;
+            box-shadow: 0 4px 15px rgba(194, 139, 89, 0.5); cursor: pointer; z-index: 100; transition: transform 0.2s;
+        }
+        .fab.show { display: flex; }
+        .fab:active { transform: scale(0.9); }
+
+        .action-menu {
+            position: fixed; bottom: 150px; right: 25px; display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; transform: translateY(20px); z-index: 99;
+        }
+        .action-menu.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .action-menu button {
+            background-color: var(--bg-panel); border: 2px solid var(--accent);
+            color: var(--text-dark); font-weight: 800; padding: 10px 15px; border-radius: 20px;
+            box-shadow: var(--shadow); display: flex; align-items: center; gap: 8px; font-size: 14px;
+        }
+        .action-menu button:active { background-color: var(--accent); color: #fff; }
+
+        /* Journal de bord */
+        .journal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(74, 59, 50, 0.8); z-index: 200;
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .journal-overlay.open { display: flex; }
+        .journal-box {
+            background-color: var(--bg-panel); width: 100%; max-height: 80%;
+            border-radius: 20px; padding: 20px; overflow-y: auto; box-shadow: var(--shadow);
+        }
+        .journal-box h2 { margin-top: 0; color: var(--accent); }
+        .log-entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dotted #ccc; font-size: 13px; }
+        .log-entry strong { color: var(--text-dark); }
+
+        /* --- GRILLE DE DEBUG (Nouveau) --- */
+        .debug-map {
+            flex-grow: 1; background-color: #1a1a1a; border-radius: 15px;
+            position: relative; overflow: hidden; display: grid;
+            grid-template-columns: repeat(20, 1fr); grid-template-rows: repeat(20, 1fr);
+            gap: 1px; padding: 5px; box-shadow: inset 0 0 20px #000;
+        }
+        .grid-cell {
+            background-color: #2a2a2a; border-radius: 2px;
+        }
+        .grid-cell.fog { background-color: #111; } /* Brouillard de guerre */
+        .grid-cell.planet { background-color: #5C7C7A; border-radius: 50%; box-shadow: 0 0 8px #5C7C7A; }
+        .grid-cell.planet-base { background-color: #C28B59; border-radius: 50%; box-shadow: 0 0 10px #C28B59; }
+        .grid-cell.ship { background-color: #8C6A9E; border-radius: 50%; box-shadow: 0 0 10px #8C6A9E; z-index: 10; }
+        .grid-cell.hazard { background-color: #D9534F; box-shadow: 0 0 8px #D9534F; }
+
+        .debug-info {
+            font-size: 12px; color: #ccc; text-align: center; margin-top: 10px;
+            font-family: monospace; background: #000; padding: 5px; border-radius: 5px;
+        }
+
+    </style>
+
+
+
+    <div class="status-bar">
+        <span>DÉCURION</span>
+        <button class="journal-btn" onclick="toggleJournal()">📝</button>
+        <span>FROMBOLA</span>
+    </div>
+
+    <div class="tabs">
+        <button id="tab-equip" class="active" onclick="switchTab('equip')">🛠️ ÉQUIPEMENT</button>
+        <button id="tab-nav" onclick="switchTab('nav')">🧭 NAVIGATION</button>
+        <button id="tab-map" onclick="switchTab('map')">🗺️ GRILLE (DEBUG)</button>
+    </div>
+
+    <!-- PANNEAU ÉQUIPEMENT -->
+    <div id="panel-equip" class="panel active">
+        <div class="capacity-bar"><div class="capacity-fill" id="cap-fill"></div><div class="capacity-text" id="cap-text">0 / 10</div></div>
+        <div class="item-row"><span>Équipages</span><div class="btn-group"><button class="btn-round" onclick="updateItem('eq', -1)">-</button><span id="val-eq" class="item-value">2</span><button class="btn-round" onclick="updateItem('eq', 1)">+</button></div></div>
+        <div class="item-row"><span>Boucliers</span><div class="btn-group"><button class="btn-round" onclick="updateItem('bcl', -1)">-</button><span id="val-bcl" class="item-value">2</span><button class="btn-round" onclick="updateItem('bcl', 1)">+</button></div></div>
+        <div class="item-row"><span>Lasers</span><div class="btn-group"><button class="btn-round" onclick="updateItem('las', -1)">-</button><span id="val-las" class="item-value">2</span><button class="btn-round" onclick="updateItem('las', 1)">+</button></div></div>
+        <div class="item-row"><span>Radars</span><div class="btn-group"><button class="btn-round" onclick="updateItem('rad', -1)">-</button><span id="val-rad" class="item-value">2</span><button class="btn-round" onclick="updateItem('rad', 1)">+</button></div></div>
+        <div class="item-row"><span>Computers</span><div class="btn-group"><button class="btn-round" onclick="updateItem('comp', -1)">-</button><span id="val-comp" class="item-value">2</span><button class="btn-round" onclick="updateItem('comp', 1)">+</button></div></div>
+        <div class="item-row"><span>Réservoirs</span><div class="btn-group"><button class="btn-round" onclick="updateItem('res', -1)">-</button><span id="val-res" class="item-value">2</span><button class="btn-round" onclick="updateItem('res', 1)">+</button></div></div>
+        <button class="btn-primary" onclick="validateLoadout()">VALIDER L'ÉQUIPEMENT</button>
+    </div>
+
+    <!-- PANNEAU NAVIGATION -->
+    <div id="panel-nav" class="panel">
+        <div class="parsec-selector"><button class="btn-round" onclick="changeParsecs(-1)">-</button><span><span id="parsec-count">1</span> pc</span><button class="btn-round" onclick="changeParsecs(1)">+</button></div>
+        <div class="nav-grid">
+            <button onclick="addDirection('NO')">NO</button><button onclick="addDirection('N')">N</button><button onclick="addDirection('NE')">NE</button>
+            <button onclick="addDirection('O')">O</button><button class="empty"></button><button onclick="addDirection('E')">E</button>
+            <button onclick="addDirection('SO')">SO</button><button onclick="addDirection('S')">S</button><button onclick="addDirection('SE')">SE</button>
+        </div>
+        
+        <!-- Liste des étapes de la route avec bouton d'annulation -->
+        <div class="route-list" id="route-list">
+            <div style="text-align:center; color:var(--text-light); font-size:12px; font-style:italic;">Route vide</div>
+        </div>
+        
+        <button class="btn-primary btn-accent" onclick="transmitRoute()">TRANSMETTRE AU S.C.</button>
+    </div>
+
+    <!-- PANNEAU GRILLE DE DEBUG -->
+    <div id="panel-map" class="panel">
+        <div class="debug-map" id="map-container">
+            <!-- Les cases seront générées par JS -->
+        </div>
+        <div class="debug-info" id="debug-coords">Position : X:10, Y:10</div>
+    </div>
+
+    <!-- LE CHAT -->
+    <div class="chat-area" id="chat">
+        <div class="msg msg-sc"><strong>Space Computer</strong>Terminal connecté. Veuillez configurer l'équipement.</div>
+    </div>
+
+    <!-- BOUTON FLOTTANT ET MENU -->
+    <div class="action-menu" id="action-menu">
+        <button onclick="askForInfo()">📡 Scanner la planète</button>
+        <button onclick="prepareLanding()">🚀 Préparer l'atterrissage</button>
+    </div>
+    <div class="fab" id="fab-btn" onclick="toggleActionMenu()">+</div>
+
+    <!-- JOURNAL DE BORD OVERLAY -->
+    <div class="journal-overlay" id="journal-overlay" onclick="toggleJournal()">
+        <div class="journal-box" onclick="event.stopPropagation()">
+            <h2>Journal de Bord</h2>
+            <div id="log-content" style="color:var(--text-light); font-style:italic;">Aucune donnée enregistrée.</div>
+            <button class="btn-primary" onclick="toggleJournal()">Fermer</button>
+        </div>
+    </div>
+
+    <script>
+        // --- ÉTAT DU JEU ---
+        let gameState = {
+            isConfigured: false, points: 0, capacity: 10,
+            loadout: { eq: 2, bcl: 2, las: 2, rad: 2, comp: 2, res: 2 },
+            routeSequence: [], currentParsecs: 1,
+            currentPlanet: null, infoLevel: 0,
+            // Position du vaisseau (X, Y) sur la grille de 20x20
+            shipPos: { x: 10, y: 10 },
+            // Données secrètes de la galaxie
+            galaxy: [],
+            exploredCells: [] // Pour le brouillard
+        };
+
+        const planetTypes = {1:'ATELLUS', 2:'BATMOSFERA', 3:'MERCURIUS', 4:'MARS (D)', 5:'MARS (E)', 6:'VENUS', 7:'JUPITER (G)', 8:'JUPITER (H)', 9:'D.N.S.', 10:'D.N.S.'};
+        const lifeForms = {1:'ANIMALE', 2:'ANIMALE', 3:'MINÉRALE', 4:'MINÉRALE', 5:'VÉGÉTALE', 6:'VÉGÉTALE'};
+        const lifeTypes = {1:'SAPIENS', 2:'SAPIENS', 3:'SAPIENS', 4:'NON SAPIENS', 5:'NON SAPIENS', 6:'NON SAPIENS', 7:'NON SAPIENS', 8:'NON SAPIENS', 9:'D.N.S.', 10:'D.N.S.'};
+
+        // --- INITIALISATION DE LA GALAXIE (DEBUG) ---
+        function generateGalaxy() {
+            // Générer 9 planètes aléatoires
+            for(let i=0; i<9; i++) {
+                let x = Math.floor(Math.random() * 20);
+                let y = Math.floor(Math.random() * 20);
+                // Éviter la case de départ
+                if(x === 10 && y === 10) { i--; continue; } 
+                gameState.galaxy.push({ type: 'planet', x: x, y: y });
+            }
+            // Ajouter la base
+            gameState.galaxy.push({ type: 'base', x: 10, y: 10 });
+            drawMap();
+        }
+
+        function drawMap() {
+            const container = document.getElementById('map-container');
+            container.innerHTML = '';
+            
+            for(let y=0; y<20; y++) {
+                for(let x=0; x<20; x++) {
+                    let cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    
+                    // Brouillard (si on n'est pas passé par là)
+                    if(!gameState.exploredCells.some(c => c.x === x && c.y === y)) {
+                        cell.classList.add('fog');
+                    }
+
+                    // Vaisseau
+                    if(gameState.shipPos.x === x && gameState.shipPos.y === y) {
+                        cell.classList.add('ship');
+                    } else {
+                        // Planètes / Base
+                        let obj = gameState.galaxy.find(p => p.x === x && p.y === y);
+                        if(obj) {
+                            if(obj.type === 'base') cell.classList.add('planet-base');
+                            else cell.classList.add('planet');
+                        }
+                    }
+                    container.appendChild(cell);
+                }
+            }
+            document.getElementById('debug-coords').innerText = `Position : X:${gameState.shipPos.x}, Y:${gameState.shipPos.y}`;
+        }
+
+        // --- LOGIQUE D'ÉQUIPEMENT ---
+        function calculateCapacity() { let l = gameState.loadout; return l.eq + l.bcl + l.las + l.rad + l.comp + l.res; }
+        function updateUI() {
+            let l = gameState.loadout;
+            document.getElementById('val-eq').innerText = l.eq; document.getElementById('val-bcl').innerText = l.bcl;
+            document.getElementById('val-las').innerText = l.las; document.getElementById('val-rad').innerText = l.rad;
+            document.getElementById('val-comp').innerText = l.comp; document.getElementById('val-res').innerText = l.res;
+            
+            let currentCap = calculateCapacity();
+            let fillEl = document.getElementById('cap-fill');
+            fillEl.style.width = Math.min((currentCap / gameState.capacity) * 100, 100) + '%';
+            document.getElementById('cap-text').innerText = currentCap + ' / ' + gameState.capacity;
+            
+            if(currentCap > gameState.capacity) fillEl.style.backgroundColor = '#D9534F';
+            else if (currentCap === gameState.capacity) fillEl.style.backgroundColor = 'var(--sc-color)';
+            else fillEl.style.backgroundColor = 'var(--accent)';
+        }
+
+        function updateItem(type, change) {
+            let newVal = gameState.loadout[type] + change;
+            if(type === 'eq' && newVal < 1) return; if(newVal < 0) return;
+            if(change > 0 && calculateCapacity() >= gameState.capacity) { addMessage("S.C.", "Capacité maximale atteinte."); return; }
+            gameState.loadout[type] = newVal; updateUI();
+        }
+
+        function validateLoadout() {
+            if(calculateCapacity() > gameState.capacity) { addMessage("S.C.", "Surcharge du vaisseau."); return; }
+            gameState.isConfigured = true;
+            addMessage("U.C.", "Équipement validé. Prêt pour le départ.");
+            addMessage("S.C.", "Configuration enregistrée. Utilisez l'onglet Navigation.");
+            switchTab('nav');
+        }
+
+        // --- LOGIQUE DE NAVIGATION ---
+        function changeParsecs(change) {
+            gameState.currentParsecs += change;
+            if(gameState.currentParsecs < 1) gameState.currentParsecs = 1;
+            let maxPc = gameState.loadout.res * 5; 
+            if(gameState.currentParsecs > maxPc) gameState.currentParsecs = maxPc;
+            document.getElementById('parsec-count').innerText = gameState.currentParsecs;
+        }
+
+        function addDirection(dir) {
+            if(!gameState.isConfigured) { addMessage("S.C.", "Validez l'équipement d'abord."); return; }
+            let cost = (dir === 'HAUT' || dir === 'BAS') ? 4 : gameState.currentParsecs;
+            let currentTotal = gameState.routeSequence.reduce((sum, step) => sum + step.pc, 0);
+            let maxCap = gameState.loadout.res * 5;
+            if(currentTotal + cost > maxCap) { addMessage("S.C.", `Capacité réservoirs dépassée (Max ${maxCap} pc).`); return; }
+            
+            gameState.routeSequence.push({ id: Date.now(), dir: dir, pc: cost });
+            updateRouteDisplay();
+        }
+
+        function removeStep(id) {
+            gameState.routeSequence = gameState.routeSequence.filter(step => step.id !== id);
+            updateRouteDisplay();
+        }
+
+        function updateRouteDisplay() {
+            let listEl = document.getElementById('route-list');
+            listEl.innerHTML = '';
+            
+            if(gameState.routeSequence.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center; color:var(--text-light); font-size:12px; font-style:italic;">Route vide</div>';
+                return;
+            }
+
+            let totalPc = 0;
+            gameState.routeSequence.forEach(step => {
+                totalPc += step.pc;
+                let div = document.createElement('div');
+                div.className = 'route-item';
+                div.innerHTML = `<span>${step.pc} ${step.dir}</span><button onclick="removeStep(${step.id})">×</button>`;
+                listEl.appendChild(div);
+            });
+            
+            let totalDiv = document.createElement('div');
+            totalDiv.style.textAlign = "right";
+            totalDiv.style.fontSize = "12px";
+            totalDiv.style.fontWeight = "800";
+            totalDiv.style.color = "var(--accent)";
+            totalDiv.innerText = `Total : ${totalPc} pc`;
+            listEl.appendChild(totalDiv);
+        }
+
+        function transmitRoute() {
+            if(gameState.routeSequence.length === 0) { addMessage("S.C.", "Aucune route."); return; }
+            
+            let routeText = "";
+            gameState.routeSequence.forEach(step => { routeText += `${step.pc} ${step.dir}, `; });
+            routeText = routeText.slice(0, -2);
+            
+            addMessage("U.C.", `Route : ${routeText}.`);
+            
+            // Mettre à jour la position du vaisseau sur la carte (pour le debug)
+            gameState.routeSequence.forEach(step => {
+                let steps = step.pc;
+                while(steps > 0) {
+                    if(step.dir === 'N') gameState.shipPos.y--;
+                    if(step.dir === 'S') gameState.shipPos.y++;
+                    if(step.dir === 'E') gameState.shipPos.x++;
+                    if(step.dir === 'O') gameState.shipPos.x--;
+                    
+                    // Garder dans les limites de la grille 20x20
+                    gameState.shipPos.x = Math.max(0, Math.min(19, gameState.shipPos.x));
+                    gameState.shipPos.y = Math.max(0, Math.min(19, gameState.shipPos.y));
+                    
+                    // Marquer comme exploré
+                    if(!gameState.exploredCells.some(c => c.x === gameState.shipPos.x && c.y === gameState.shipPos.y)) {
+                        gameState.exploredCells.push({x: gameState.shipPos.x, y: gameState.shipPos.y});
+                    }
+                    steps--;
+                }
+            });
+            drawMap(); // Rafraîchir la carte de debug
+
+            // Simulation S.C.
+            setTimeout(() => {
+                addMessage("S.C.", "Déplacement en cours...");
+                setTimeout(() => {
+                    // Vérifier si on est sur une planète
+                    let currentObj = gameState.galaxy.find(p => p.x === gameState.shipPos.x && p.y === gameState.shipPos.y);
+                    
+                    if(currentObj && currentObj.type === 'planet') {
+                        gameState.currentPlanet = { id: Date.now(), type: null, life: null, lifeType: null };
+                        gameState.infoLevel = 0;
+                        addMessage("S.C.", `Le vaisseau est arrivé à proximité d'une planète inconnue. Radars : 1 Ouest, 2 Nord-Ouest.`);
+                        document.getElementById('fab-btn').classList.add('show');
+                    } else {
+                        addMessage("S.C.", "Déplacement terminé. Aucune planète détectée.");
+                    }
+                    gameState.routeSequence = []; updateRouteDisplay();
+                }, 1000);
+            }, 500);
+        }
+
+        // --- MENU D'ACTIONS ---
+        function toggleActionMenu() { document.getElementById('action-menu').classList.toggle('open'); }
+
+        // --- LOGIQUE D'INFORMATION ---
+        function askForInfo() {
+            document.getElementById('action-menu').classList.remove('open');
+            if(!gameState.currentPlanet) return;
+            if(gameState.loadout.comp === 0) { addMessage("S.C.", "Erreur : Pas de computer."); return; }
+            if(gameState.infoLevel >= 6) { addMessage("S.C.", "Toutes les informations ont déjà été obtenues."); return; }
+
+            addMessage("U.C.", "J'utilise un computer pour scanner la planète.");
+            
+            setTimeout(() => {
+                gameState.infoLevel++;
+                let resultText = "";
+                
+                if(gameState.infoLevel === 1) {
+                    let roll = Math.floor(Math.random() * 10) + 1;
+                    gameState.currentPlanet.type = planetTypes[roll] || "D.N.S.";
+                    resultText = `Type de planète : ${gameState.currentPlanet.type}`;
+                } 
+                else if(gameState.infoLevel === 2) {
+                    let roll = Math.floor(Math.random() * 6) + 1;
+                    gameState.currentPlanet.life = lifeForms[roll];
+                    resultText = `Forme de vie : ${gameState.currentPlanet.life}`;
+                }
+                else if(gameState.infoLevel === 3) {
+                    let roll = Math.floor(Math.random() * 10) + 1;
+                    gameState.currentPlanet.lifeType = lifeTypes[roll];
+                    resultText = `Classification : ${gameState.currentPlanet.lifeType}`;
+                }
+                else {
+                    resultText = "Les capteurs ne renvoient plus d'informations claires.";
+                    gameState.infoLevel = 6;
+                }
+                addMessage("S.C.", `Analyse terminée : ${resultText}`);
+                updateJournal(); 
+            }, 800);
+        }
+
+        function prepareLanding() {
+            document.getElementById('action-menu').classList.remove('open');
+            if(!gameState.currentPlanet) return;
+            addMessage("U.C.", "Je me prépare à atterrir.");
+            addMessage("S.C.", "Séquence d'atterrissage initiée. (Prochaine étape).");
+            document.getElementById('fab-btn').classList.remove('show');
+            gameState.currentPlanet = null; 
+        }
+
+        // --- JOURNAL DE BORD ---
+        function toggleJournal() { document.getElementById('journal-overlay').classList.toggle('open'); }
+        
+        function updateJournal() {
+            let logContent = document.getElementById('log-content');
+            if(!gameState.currentPlanet) return;
+
+            let p = gameState.currentPlanet;
+            let entryHtml = `<div class="log-entry"><strong>Planète</strong><br>`;
+            if(p.type) entryHtml += `Type: ${p.type}<br>`;
+            if(p.life) entryHtml += `Vie: ${p.life}<br>`;
+            if(p.lifeType) entryHtml += `Race: ${p.lifeType}<br>`;
+            entryHtml += `</div>`;
+
+            logContent.innerHTML = entryHtml;
+        }
+
+        // --- LOGIQUE UI GENERALE ---
+        function switchTab(tab) {
+            document.getElementById('panel-equip').classList.remove('active');
+            document.getElementById('panel-nav').classList.remove('active');
+            document.getElementById('panel-map').classList.remove('active');
+            document.getElementById('tab-equip').classList.remove('active');
+            document.getElementById('tab-nav').classList.remove('active');
+            document.getElementById('tab-map').classList.remove('active');
+
+            if(tab === 'equip') { document.getElementById('panel-equip').classList.add('active'); document.getElementById('tab-equip').classList.add('active'); }
+            else if(tab === 'nav') { document.getElementById('panel-nav').classList.add('active'); document.getElementById('tab-nav').classList.add('active'); }
+            else { document.getElementById('panel-map').classList.add('active'); document.getElementById('tab-map').classList.add('active'); }
+        }
+
+        function addMessage(author, text) {
+            const chat = document.getElementById('chat');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = author === 'S.C.' ? 'msg msg-sc' : 'msg msg-uc';
+            let authorName = author === 'S.C.' ? 'Space Computer' : 'Commandant';
+            msgDiv.innerHTML = `<strong>${authorName}</strong>${text}`;
+            chat.appendChild(msgDiv);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        // --- INITIALISATION ---
+        generateGalaxy();
+        updateUI();
+    </script>
+
+<script src="./script.js"></script></body></html>
